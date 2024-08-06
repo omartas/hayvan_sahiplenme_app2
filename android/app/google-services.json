@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "541770455271",
+    "project_id": "hayvansahiplendirme-65c43",
+    "storage_bucket": "hayvansahiplendirme-65c43.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:541770455271:android:786a307f72fc4021dbaa42",
+        "android_client_info": {
+          "package_name": "com.example.hayvan_sahiplenme_app2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCyukB_9zJ2uyeQsN8l2NgUSxw3Axnw0IA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
