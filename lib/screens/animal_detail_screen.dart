@@ -5,7 +5,7 @@ import '../models/animal_model.dart';
 
 class AnimalDetailScreen extends StatelessWidget {
   final AnimalModel animal;
-  String imageUrl ='https://via.placeholder.com/150';
+  final String imageUrl ='https://st.depositphotos.com/1594920/2143/i/450/depositphotos_21432503-stock-photo-close-up-of-border-collie.jpg';
 
   AnimalDetailScreen({required this.animal});
 
@@ -30,7 +30,7 @@ class AnimalDetailScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-              Text("Tarih: ${animal.date.toDate()}"),
+              Text("Tarih: ${animal.date.toDate()}",),
               IconButton(onPressed: (){}, icon: Icon(Icons.favorite))
             ],),
             //SizedBox(height: 16),

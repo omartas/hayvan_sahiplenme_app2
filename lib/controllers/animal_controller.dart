@@ -69,7 +69,7 @@ class AnimalController extends GetxController {
           .update({'status': 'Adopted'});
       fetchAnimalsByShelterId(AnimalsScreen.shelterId); // Hayvanların listesini güncelle
       //Get.snackbar('Adoption', 'You have successfully adopted the animal.');
-      Get.back();
+      //Get.back();
     } catch (e) {
       print("Error adopting animal: $e");
     }

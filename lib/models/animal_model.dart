@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AnimalModel {
   final String id;
+  final String name;
   final String type;
   final String breed;
   final String gender;
@@ -10,8 +11,11 @@ class AnimalModel {
   final String status;
   final int age;
   final Timestamp date;
+  final List imageUrl;
 
   AnimalModel( {
+    required this.imageUrl,
+    required this.name,
     required this.date,
     required this.id,
     required this.type,
@@ -33,6 +37,8 @@ class AnimalModel {
       status: map['status'] ?? '',
       age: map['age']?.toInt() ?? 0, 
       date: map["date"]?? Timestamp(2, 2), 
+      imageUrl: map["images"] ?? [],
+      name: map["name"]??"name,"
     );
   }
 }
