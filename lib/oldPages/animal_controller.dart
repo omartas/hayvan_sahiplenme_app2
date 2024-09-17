@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:hayvan_sahiplenme_app2/screens/animals_screen.dart';
-import '../models/animal_model.dart';
+import 'package:hayvan_sahiplenme_app2/oldPages/animals_screen.dart';
+import 'animal_model.dart';
 
 class AnimalController extends GetxController {
     void fetchAnimals() async {

@@ -3,12 +3,12 @@ import 'package:get/get.dart';
 
 import '../controllers/auth_controller.dart';
 import '../models/donation_model.dart';
-import 'login_screen.dart';
+import '../screens/login_screen.dart';
 
 class DonationsPage extends StatelessWidget {
   final List<Donation> donations = [
     Donation(
-      amount: 50,
+      amount: 400,
       date: DateTime.now().subtract(Duration(days: 2)),
     ),
     Donation(
@@ -48,7 +48,7 @@ class DonationsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final AuthController authController = Get.find<AuthController>();
     int totalDonationAmount = donations.fold(0, (sum, item) => sum + item.amount);
-if (authController.user == null) {
+if (authController.isLoggedIn.value!=true) {
           return Center(
             child: ElevatedButton(
                 onPressed: () => Get.offAll(() => LoginScreen()),

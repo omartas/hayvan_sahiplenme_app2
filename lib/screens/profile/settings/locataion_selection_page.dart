@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hayvan_sahiplenme_app2/constans.dart';
-import 'package:hayvan_sahiplenme_app2/screens/animals_screen.dart';
-import 'package:hayvan_sahiplenme_app2/widgets/navigation_menu.dart';
-import '../../../data/cities.dart';  // Şehirler ve ilçeleri içeriyor
-import '../../../data/districts.dart';  // İlçeler ve barınakları içeriyor
+import '../../../controllers/city_controller.dart';
+import '../../../models/city_model.dart'; // Şehirler ve ilçeleri içeriyor
 
 class LocationSelectionPage extends StatefulWidget {
   @override
@@ -12,13 +10,13 @@ class LocationSelectionPage extends StatefulWidget {
 }
 
 class _LocationSelectionPageState extends State<LocationSelectionPage> {
+  final CityController cityController = Get.put(CityController());
   String? _selectedCity;
   String? _selectedDistrict;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       appBar: AppBar(
         title: Text('Barınak Seçimi'),
       ),
@@ -26,43 +24,51 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
         padding: normalPadding32,
         child: Column(
           children: [
-            DropdownButton<String>(
+            // Şehir seçim dropdown
+            DropdownButtonFormField<String>(
               hint: Text("İl Seçin"),
               value: _selectedCity,
+              icon: Icon(Icons.location_pin),
               isExpanded: true,
-              items: citiesAndDistricts.keys.map((String city) {
-                return DropdownMenuItem<String>(
-                  value: city,
-                  child: Text(city),
-                );
-              }).toList(),
+              items: cityController.cities
+                  .map((City city) => DropdownMenuItem<String>(
+                        value: city.name,
+                        child: Text(city.name),
+                      ))
+                  .toSet()
+                  .toList(),
               onChanged: (String? newValue) {
                 setState(() {
                   _selectedCity = newValue;
-                  _selectedDistrict = null;
-            
+                  _selectedDistrict = null; // İlçe seçimlerini sıfırla
                 });
               },
             ),
+            SizedBox(height: 12),
+            // İlçe seçim dropdown
             if (_selectedCity != null)
-              DropdownButton<String>(
+              DropdownButtonFormField<String>(
                 hint: Text("İlçe Seçin"),
                 value: _selectedDistrict,
+                icon: Icon(Icons.location_city),
                 isExpanded: true,
-                items: citiesAndDistricts[_selectedCity!]!.map((String district) {
-                  return DropdownMenuItem<String>(
-                    value: district,
-                    child: Text(district),
-                  );
-                }).toList(),
+                items: cityController.cities
+                    .where((city) => city.name == _selectedCity)
+                    .expand((city) => city.districts)
+                    .map((District district) => DropdownMenuItem<String>(
+                          value: district.name,
+                          child: Text(district.name),
+                        ))
+                    .toSet()
+                    .toList(),
                 onChanged: (String? newValue) {
                   setState(() {
                     _selectedDistrict = newValue;
-                   
                   });
                 },
               ),
-            
+            SizedBox(height: 12),
+            // Seçilen ilçe ve onay butonu
             if (_selectedDistrict != null)
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -71,12 +77,17 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
-              if (_selectedDistrict != null)
-              ElevatedButton(onPressed: (){Get.offAll(()=>NavigationMenu());}, child: Text("Onayla"))
+            if (_selectedDistrict != null)
+              ElevatedButton(
+                onPressed: () {
+                  // Get.offAll(() => NavigationMenu());
+                  // Konum değiştirme olacaksa burada işlem yapılacak.
+                },
+                child: Text("Onayla"),
+              ),
           ],
         ),
       ),
     );
   }
 }
-  

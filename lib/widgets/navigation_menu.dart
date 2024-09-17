@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hayvan_sahiplenme_app2/screens/my_adopted_animals_screen.dart';
-import 'package:hayvan_sahiplenme_app2/screens/my_donations_page_screen.dart';
-
+import 'package:hayvan_sahiplenme_app2/screens/adoption_posts_screen.dart';
+import 'package:hayvan_sahiplenme_app2/screens/favorites_screen.dart';
+import 'package:hayvan_sahiplenme_app2/screens/my_adoptions_page.dart';
+import 'package:hayvan_sahiplenme_app2/screens/my_feedings.dart';
 import '../controllers/nav_controller.dart';
-import '../screens/animals_screen.dart';
 import '../screens/favorites_screen.dart';
 import '../screens/profile/profile_screen.dart';
 
@@ -60,16 +60,19 @@ class _BottomNavBarState extends State<BottomNavBar> {
   }
 }
 final List<Widget> _pages = [
-    AnimalsScreen(),
-    DonationsPage(),
-    FavoritesScreen(),
-    AdoptedAnimalsPage(),
+  AdoptionPostsPage(),
+    //AnimalsScreen(),
+    FeedingsPage(),
+    //FavoritesScreen(),
+    FavoritesTestScreen(),
+    MyAdoptionsPage(),
+    //LoginPage(),
     ProfileScreen(),
   ];
 
   List<BottomNavigationBarItem> ItemList =[
           BottomNavigationBarItem(icon: Icon(Icons.home,), label: 'Ana Sayfa'),
-          BottomNavigationBarItem(icon: Icon(Icons.monetization_on),label: "Bağışlarım"),
+          BottomNavigationBarItem(icon: Icon(Icons.payment_rounded),label: "Bağışlarım"),
           BottomNavigationBarItem(icon: Icon(Icons.favorite,), label: 'Favoriler'),
           BottomNavigationBarItem(icon: Icon(Icons.home_work),label: "Sahiplenme"),
           BottomNavigationBarItem(icon: Icon(Icons.person,), label: 'Profil'),

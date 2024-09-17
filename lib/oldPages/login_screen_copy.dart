@@ -19,8 +19,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final AuthController authController = Get.find<AuthController>();
   final _formKey = GlobalKey<FormState>();
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
@@ -67,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               padding: EdgeInsets.all(8.0),
                               child: TextFormField(
                                 validator: Validators.loginrValidateEmail,
-                                controller: _emailController,
+                                controller: emailController,
                                 decoration: InputDecoration(
                                     border: InputBorder.none,
                                     hintText: "E-Mail",
@@ -82,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               padding: EdgeInsets.all(8.0),
                               child: TextFormField(
                                 validator: Validators.loginValidatePassword,
-                                controller: _passwordController,
+                                controller: passwordController,
                                 obscureText: true,
                                 decoration: InputDecoration(
                                     border: InputBorder.none,
@@ -99,7 +99,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: GestureDetector(
                         onTap: () {
                           if (_formKey.currentState!.validate()) {
-                           authController.login(_emailController.text, _passwordController.text);
+                            authController.login(
+                                emailController.text, passwordController.text);
                           }
                         },
                         child: Container(
@@ -184,8 +185,6 @@ class _LoginScreenState extends State<LoginScreen> {
           )),
     );
   }
-    
-
 }
 
 class SpecialSizedBox extends StatelessWidget {
@@ -200,3 +199,81 @@ class SpecialSizedBox extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:hayvan_sahiplenme_app2/widgets/navigation_menu.dart';
+import '../../controllers/auth_controller.dart';
+import 'register_screen.dart';
+
+class LoginScreen extends StatelessWidget {
+  final AuthController authController = Get.find<AuthController>();
+
+  @override
+  Widget build(BuildContext context) {
+    TextEditingController emailController = TextEditingController();
+    TextEditingController passwordController = TextEditingController();
+
+    return Scaffold(
+      appBar: AppBar(title: Text('Login')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(labelText: 'Email'),
+            ),
+            TextField(
+              controller: passwordController,
+              decoration: InputDecoration(labelText: 'Password'),
+              obscureText: true,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                authController.login(emailController.text, passwordController.text);
+              },
+              child: Text('Login'),
+            ),
+            TextButton(
+              onPressed: () {
+                Get.to(() => RegisterScreen());
+              },
+              child: Text('Register'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Misafir olarak devam et
+                Get.offAll(() => NavigationMenu());
+              },
+              child: Text('Continue as Guest'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+*/

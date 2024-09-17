@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import '../models/shelter_model.dart';
+import 'shelter_model.dart';
 
 class ShelterController extends GetxController {
   FirebaseFirestore _firestore = FirebaseFirestore.instance;

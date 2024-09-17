@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hayvan_sahiplenme_app2/constans.dart';
+import 'package:hayvan_sahiplenme_app2/models/animal_model_api.dart';
 import 'package:hayvan_sahiplenme_app2/widgets/navigation_menu.dart';
-
-import '../../controllers/animal_controller.dart';
-import '../../models/animal_model.dart';
+import '../controllers/user_controller.dart';
+import '../services/payment_service.dart';
+import '../utils/payment_amounts_service.dart';
+import '../validators.dart';
 
 class AdoptionFormPage extends StatefulWidget {
-  final AnimalModel animal;
+  final AnimalModelApi animal;
 
   const AdoptionFormPage({super.key, required this.animal});
 
@@ -21,16 +23,50 @@ class _AdoptionFormPageState extends State<AdoptionFormPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _cardNumberController = TextEditingController();
-  final TextEditingController _expiryDateController = TextEditingController();
   final TextEditingController _cardHolderNameController =
       TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _idNoController = TextEditingController();
+  final TextEditingController _expiryDateMonthController =
+      TextEditingController();
+  final TextEditingController _expiryDateYearController =
+      TextEditingController();
+  List<int> amounts = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAmounts(); // Servisten veriyi çek
+  }
+
+  // Servisi kullanarak veriyi çek
+  Future<void> fetchAmounts() async {
+    PaymentAmountService service = PaymentAmountService(); // Servisi oluştur
+    try {
+      final fetchedAmounts = await service.fetchPaymentAmounts();
+
+      // Liste null veya boş değilse UI'yi güncelle
+      setState(() {
+        amounts = fetchedAmounts;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching payment amounts: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   var _selectedAmount;
 
   DateTime? selectedDate;
   bool removeAdFromListing = false;
   bool showPaymentSection = false;
-  int mamaUcreti = 100;
 
+  final PaymentAmountsService paymentService = PaymentAmountsService();
+  final UserController userController = Get.find<UserController>();
   @override
   Widget build(BuildContext context) {
     var _appBarTitle = "Hayvan Sahiplenme Formu";
@@ -40,8 +76,23 @@ class _AdoptionFormPageState extends State<AdoptionFormPage> {
     var _cardNumberLabelText = "Kart Numarası";
     var _cardDateLabelText = "Son Kullanma Tarihi (AA/YY)";
     var _cvvLabelText = "CVV";
+
+    int petID = widget.animal.id;
+    String price = _amountController.value.text;
+    String type = 'adoption'; // feeding veya adoption
+    String cardHolderName = _cardHolderNameController.text;
+    String cardNumber = _cardNumberController.text;
+    String expireMonth = _expiryDateMonthController.text;
+    String expireYear = "20" + _expiryDateYearController.text;
+    String cvc = _cvvController.text;
+    String tc = _idNoController.text; // T.C. Kimlik Numarası
+    String city = userController.user.value.city.name;
+    String district = userController.user.value.district.name;
+    String country = 'Türkiye';
+    String address = _addressController.text;
     return Scaffold(
-      resizeToAvoidBottomInset: false,// klavye açıldığında bottom overflow hatasını önler.
+      resizeToAvoidBottomInset:
+          false, // klavye açıldığında bottom overflow hatasını önler.
       appBar: AppBar(
         title: Text(_appBarTitle),
       ),
@@ -49,30 +100,38 @@ class _AdoptionFormPageState extends State<AdoptionFormPage> {
         padding: normalPadding32,
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: ListView(
             children: [
-
               Text(_adoptPriceInfo),
               SizedBox(height: 16.0),
-              DropdownButtonFormField(
+              DropdownButtonFormField<int>(
                 validator: (value) {
                   if (value == null || value.toString().isEmpty) {
-                    return 'Lütfen bir mama bağış tutarı seçiniz.';
+                    return 'Lütfen bir mama bağış tutarı seçiniz.'; // Doğrulama mesajı
                   }
                   return null;
                 },
                 dropdownColor: Colors.white,
-                hint: Text("Bağış Miktarını Seçiniz"),
-                value: _selectedAmount,
-                items: donationAmounts,
-                onChanged: (value) {
+                hint: Text("Bağış Miktarını Seçiniz"), // Açılış mesajı
+                value: _selectedAmount, // Seçili olan değer
+                items: amounts.map<DropdownMenuItem<int>>((int value) {
+                  return DropdownMenuItem<int>(
+                    value: value,
+                    child: Text(
+                        '$value TL'), // Değerin yanında birim gösterebiliriz
+                  );
+                }).toList(),
+                onChanged: (int? value) {
                   setState(() {
-                    _selectedAmount = value;
+                    _selectedAmount = value; // Seçili değeri güncelle
+                    _amountController.text = value != null
+                        ? value.toString()
+                        : ''; // TextField'a yazdır
                   });
                 },
-                isExpanded: true,
+                isExpanded: true, // Dropdown genişler
               ),
+
               SizedBox(height: 16.0),
               Text(
                 "Ödeme Bilgilerini Giriniz",
@@ -118,23 +177,44 @@ class _AdoptionFormPageState extends State<AdoptionFormPage> {
                 },
               ),
               SizedBoxSize8(),
-
-              TextFormField(
-                controller: _expiryDateController,
-                keyboardType: TextInputType.datetime,
-                decoration: InputDecoration(
-                  labelText: _cardDateLabelText,
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Lütfen son kullanma tarihini girin';
-                  }
-                  if (!validateExpiryDate(value)) {
-                    return 'Geçersiz son kullanma tarihi';
-                  }
-                  return null;
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _expiryDateMonthController,
+                      keyboardType: TextInputType.datetime,
+                      decoration: InputDecoration(
+                        labelText: "Ay (AA)",
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Lütfen son kullanma tarihini girin';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    width: 8,
+                  ),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _expiryDateYearController,
+                      keyboardType: TextInputType.datetime,
+                      decoration: InputDecoration(
+                        labelText: "Yıl (YY)",
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Lütfen son kullanma tarihini girin';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
               ),
               SizedBoxSize8(),
 
@@ -147,7 +227,7 @@ class _AdoptionFormPageState extends State<AdoptionFormPage> {
                   LengthLimitingTextInputFormatter(4), // Maksimum 4 rakam
                 ],
                 decoration: InputDecoration(
-                  labelText: _cvvLabelText,
+                  labelText: "CVV",
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
@@ -161,12 +241,61 @@ class _AdoptionFormPageState extends State<AdoptionFormPage> {
                   return null;
                 },
               ),
-              Spacer(),
-              ElevatedButton(
-                onPressed: () {
-                  _submitForm();
+              SizedBoxSize8(),
+              Text(
+                "Fatura kesimi için gereklidir.",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBoxSize8(),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: "T.C Kimik No / Vergi No",
+                  border: OutlineInputBorder(),
+                ),
+                controller: _idNoController,
+                keyboardType: TextInputType.number,
+                validator: Validators.validateTcOrVergiNo,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(11), // Maksimum 114 rakam
+                ],
+              ),
+              SizedBoxSize8(),
+              TextFormField(
+                validator: Validators.validateAddress,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: "Adres",
+                  border: OutlineInputBorder(),
+                ),
+                controller: _addressController,
+              ),
+              SizedBox(height: 20),
+              BlueButton(
+                function: () {
+                  _formKey.currentState!.save();
+                  if (_formKey.currentState!.validate()) {
+                    paymentService.initiatePayment(
+                      context: context,
+                      userController: userController,
+                      petID: petID,
+                      price: price,
+                      type: type,
+                      cardHolderName: cardHolderName,
+                      cardNumber: cardNumber,
+                      expireMonth: expireMonth,
+                      expireYear: expireYear,
+                      cvc: cvc,
+                      tc: tc,
+                      address: address,
+                      city: city,
+                      district: district,
+                      country: country,
+                    );
+                  }
                 },
-                child: Text("Onayla ve Sahiplen"),
+                text: "Sahiplenmeyi Başlat",
+                enabled: true,
               ),
             ],
           ),
@@ -215,24 +344,6 @@ class _AdoptionFormPageState extends State<AdoptionFormPage> {
     }
 
     return true;
-  }
-
-  void _submitForm() {
-      if (_formKey.currentState!.validate()) {
-        // Buraya sahiplenme işlemini ekleyebiliriz
-        AnimalController().adoptAnimal(widget.animal.id);
-        _showCustomDialog(context, "555 333 55 55");
-        // Formu işleme ve sunucuya gönderme işlemleri
-        if (removeAdFromListing && showPaymentSection) {
-          // Ödeme bilgilerini doğrula ve işle
-          _processPayment();
-        }
-      }
-    
-  }
-
-  void _processPayment() {
-    // Ödeme işleme mantığı burada olacak
   }
 }
 
@@ -287,7 +398,7 @@ class SizedBoxSize8 extends StatelessWidget {
     return SizedBox(height: 8.0);
   }
 }
-
+/*
 List<DropdownMenuItem> donationAmounts = [
   DropdownMenuItem(child: Text("100 TL"), value: 100),
   DropdownMenuItem(child: Text("200 TL"), value: 200),
@@ -297,3 +408,4 @@ List<DropdownMenuItem> donationAmounts = [
   DropdownMenuItem(child: Text("1600 TL"), value: 1600),
   DropdownMenuItem(child: Text("2000 TL"), value: 2000),
 ];
+*/

@@ -70,7 +70,7 @@ class AnimalCard extends StatelessWidget {
                     aimalfeature: gender,
                   ),
                   AnimalFeaturesText(
-                    feature: "İlan Tarihi",
+                    feature: "Durum",
                     aimalfeature: status,
                   ),
                   Align(child: Text("İlana git ->",),alignment: Alignment.bottomRight,),

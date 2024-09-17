@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hayvan_sahiplenme_app2/constans.dart';
 import 'package:hayvan_sahiplenme_app2/screens/donate_screen.dart';
-import '../../models/animal_model.dart';
+import 'animal_model.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
-import 'adoption_form_page.dart';
 class AnimalDetailTestScreen extends StatefulWidget {
   final AnimalModel animal;
 
@@ -123,7 +122,9 @@ class _AnimalDetailTestScreenState extends State<AnimalDetailTestScreen> {
                   Expanded(
                     child: BlueButton(
                       text: "Mama Ver",
-                      function: () {Get.to(DonateScreen(shelterName: "Atakum Belediyesi"));},
+                      function: () {
+                        //Get.to(DonateScreen(shelterName: "Atakum Belediyesi"));
+                        }, enabled: true,
                     ),
                   ),
                   SizedBox(width: 15,),
@@ -131,8 +132,8 @@ class _AnimalDetailTestScreenState extends State<AnimalDetailTestScreen> {
                     child: BlueButton(
                       text: "Sahiplen",
                       function: () {
-                        Get.to(() => AdoptionFormPage(animal: widget.animal,));
-                      },
+                        //Get.to(() => AdoptionFormPage(animal: widget.animal,));
+                      }, enabled: true,
                     ),
                   )
                 ],

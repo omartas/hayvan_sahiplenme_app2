@@ -1,14 +1,19 @@
+
+import 'package:hayvan_sahiplenme_app2/controllers/user_controller.dart';
+import 'package:hayvan_sahiplenme_app2/services/payment_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hayvan_sahiplenme_app2/validators.dart';
 import '../constans.dart';
-import '../theme.dart';
+import '../models/animal_model_api.dart';
+import '../utils/payment_amounts_service.dart';
 
 class DonateScreen extends StatefulWidget {
   final String shelterName;
+  final AnimalModelApi animal;
 
-  DonateScreen({required this.shelterName});
+  DonateScreen({required this.shelterName, required this.animal});
 
   @override
   _DonateScreenState createState() => _DonateScreenState();
@@ -18,19 +23,83 @@ class _DonateScreenState extends State<DonateScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _cardNumberController = TextEditingController();
-  final TextEditingController _expiryDateController = TextEditingController();
+  final TextEditingController _expiryDateMonthController =
+      TextEditingController();
+  final TextEditingController _expiryDateYearController =
+      TextEditingController();
   final TextEditingController _cvvController = TextEditingController();
-  final TextEditingController _cardHolderNameController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _idNoController = TextEditingController();
+  final TextEditingController _cardHolderNameController =
+      TextEditingController();
+
+  List<int> amounts = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAmounts(); // Servisten veriyi çek
+  }
+
+  // Servisi kullanarak veriyi çek
+  Future<void> fetchAmounts() async {
+    PaymentAmountService service = PaymentAmountService(); // Servisi oluştur
+    try {
+      final fetchedAmounts = await service.fetchPaymentAmounts();
+
+      // Liste null veya boş değilse UI'yi güncelle
+      setState(() {
+        amounts = fetchedAmounts;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching payment amounts: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   bool donateAmount = false;
   var _selectedAmount;
   bool showSpecialAmount = false;
 
   //final _amountController = TextEditingController();
+  final PaymentAmountsService paymentService = PaymentAmountsService();
   final _messageController = TextEditingController();
-
+  final UserController userController = Get.find<UserController>();
   @override
   Widget build(BuildContext context) {
+    int petID = widget.animal.id;
+    String price = _amountController.value.text;
+    String type = 'feeding'; // feeding veya adoption
+    String cardHolderName = _cardHolderNameController.text;
+    String cardNumber = _cardNumberController.text;
+    String expireMonth = _expiryDateMonthController.text;
+    String expireYear = "20" + _expiryDateYearController.text;
+    String cvc = _cvvController.text;
+    String tc = _idNoController.text; // T.C. Kimlik Numarası
+    String city = userController.user.value.city.name;
+    String district = userController.user.value.district.name;
+    String country = 'Türkiye';
+    String address = _addressController.text;
+    // Örnek veriler
+    /*
+    int petID =1;
+    String price = "100";
+    String type = 'feeding'; // feeding veya adoption
+    String cardHolderName = 'John doe';
+    String cardNumber = '5890040000000016';
+    String expireMonth = '12';
+    String expireYear = '2025';
+    String cvc = '500';
+    String tc = '12345678911'; // T.C. Kimlik Numarası
+    String city = 'Samsun';
+    String district = 'atakum';
+    String country = 'Türkiye';
+    String address = 'körfez mah 50108 sokak bina 9 no 15';
+    */
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.shelterName} Bağış Ekranı'),
@@ -45,7 +114,7 @@ class _DonateScreenState extends State<DonateScreen> {
                 'Hayvan barınaklarındaki patili dostlarımıza seçtiğiniz tutar ile mama bağışı yapabilirsiniz.',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -62,31 +131,35 @@ class _DonateScreenState extends State<DonateScreen> {
                       }),
                 ],
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 12),
               if (!showSpecialAmount)
-                Expanded(
-                  child: DropdownButtonFormField(
-                    validator:(value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Lütfen bir mama bağış tutarı seçiniz.';
+                DropdownButtonFormField<int>(
+                validator: (value) {
+                  if (value == null || value.toString().isEmpty) {
+                    return 'Lütfen bir mama bağış tutarı seçiniz.'; // Doğrulama mesajı
                   }
                   return null;
-                } ,
-                    dropdownColor: Colors.white,
-                    hint: Text("Bağış Miktarını Seçiniz"),
-                    value: _selectedAmount,
-                    items: donationAmounts,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedAmount = value;
-                        if (_selectedAmount != null) {
-                          donateAmount = true;
-                        }
-                      });
-                    },
-                    isExpanded: true,
-                  ),
-                ),
+                },
+                dropdownColor: Colors.white,
+                hint: Text("Bağış Miktarını Seçiniz"), // Açılış mesajı
+                value: _selectedAmount, // Seçili olan değer
+                items: amounts.map<DropdownMenuItem<int>>((int value) {
+                  return DropdownMenuItem<int>(
+                    value: value,
+                    child: Text(
+                        '$value TL'), // Değerin yanında birim gösterebiliriz
+                  );
+                }).toList(),
+                onChanged: (int? value) {
+                  setState(() {
+                    _selectedAmount = value; // Seçili değeri güncelle
+                    _amountController.text = value != null
+                        ? value.toString()
+                        : ''; // TextField'a yazdır
+                  });
+                },
+                isExpanded: true, // Dropdown genişler
+              ),
               if (showSpecialAmount)
                 TextFormField(
                   controller: _amountController,
@@ -109,7 +182,7 @@ class _DonateScreenState extends State<DonateScreen> {
               SizedBoxSize8(),
 
               Text(
-                "Ödeme Bilgilerini Giriniz",
+                "Ödeme Bilgilerini Giriniz.",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBoxSize8(),
@@ -129,7 +202,7 @@ class _DonateScreenState extends State<DonateScreen> {
                 },
               ),
               SizedBoxSize8(),
-              
+
               TextFormField(
                 controller: _cardNumberController,
                 keyboardType: TextInputType.number,
@@ -153,22 +226,44 @@ class _DonateScreenState extends State<DonateScreen> {
               ),
               SizedBoxSize8(),
 
-              TextFormField(
-                controller: _expiryDateController,
-                keyboardType: TextInputType.datetime,
-                decoration: InputDecoration(
-                  labelText: "Son Kullanma Tarihi (AA/YY)",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Lütfen son kullanma tarihini girin';
-                  }
-                  if (!validateExpiryDate(value)) {
-                    return 'Geçersiz son kullanma tarihi';
-                  }
-                  return null;
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _expiryDateMonthController,
+                      keyboardType: TextInputType.datetime,
+                      decoration: InputDecoration(
+                        labelText: "Ay (AA)",
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Lütfen son kullanma tarihini girin';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    width: 8,
+                  ),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _expiryDateYearController,
+                      keyboardType: TextInputType.datetime,
+                      decoration: InputDecoration(
+                        labelText: "Yıl (YY)",
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Lütfen son kullanma tarihini girin';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
               ),
               SizedBoxSize8(),
 
@@ -196,21 +291,59 @@ class _DonateScreenState extends State<DonateScreen> {
                 },
               ),
               SizedBoxSize8(),
-
+              Text(
+                "Fatura kesimi için gereklidir.",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBoxSize8(),
               TextFormField(
-                controller: _messageController,
                 decoration: InputDecoration(
-                  labelText: 'Bir Mesaj Bırak',
+                  labelText: "T.C Kimik No / Vergi No",
                   border: OutlineInputBorder(),
                 ),
-                maxLines: 3,
+                controller: _idNoController,
+                keyboardType: TextInputType.number,
+                validator: Validators.validateTcOrVergiNo,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(11), // Maksimum 114 rakam
+                ],
+              ),
+              SizedBoxSize8(),
+              TextFormField(
+                maxLines: 2,
+                validator: Validators.validateAddress,
+                decoration: InputDecoration(
+                  labelText: "Adres",
+                  border: OutlineInputBorder(),
+                ),
+                controller: _addressController,
               ),
               SizedBox(height: 20),
               BlueButton(
                   function: () {
-                    _submitDonate();
+                    _formKey.currentState!.save();
+                    if (_formKey.currentState!.validate()) {
+                      paymentService.initiatePayment(
+                        context: context,
+                        userController: userController,
+                        petID: petID,
+                        price: price,
+                        type: type,
+                        cardHolderName: cardHolderName,
+                        cardNumber: cardNumber,
+                        expireMonth: expireMonth,
+                        expireYear: expireYear,
+                        cvc: cvc,
+                        tc: tc,
+                        address: address,
+                        city: city,
+                        district: district,
+                        country: country,
+                      );
+                    }
                   },
-                  text: "Mama Bağışı Yap"),
+                  text: "Mama Bağışı Yap", enabled: true,),
             ],
           ),
         ),
@@ -224,66 +357,6 @@ class _DonateScreenState extends State<DonateScreen> {
     _messageController.dispose();
     super.dispose();
   }
-
-  void _submitDonate() {
-
-      if (_formKey.currentState!.validate()) {
-      //Get.offAll(NavigationMenu());
-      Get.snackbar("Tebrikler",
-          "Bağışınız başarıyla alındı. Barınak hayvanlarına yaptığınız bağış için teşekkür ederiz",
-          backgroundColor: AppColors1.accentColor);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kredi Kartı Bilgileri Geçerli!')),
-      );
-      // Kart bilgilerini işleme alabilirsiniz.
-    }
-    
-
-    //Get.snackbar("Uyarı", "Bağış yapmak için lütfen bir fiyat belirleyin",backgroundColor: AppColors1.accentColor);
-  }
-
-  bool validateCardNumber(String input) {
-    if (input.length != 16) return false;
-    return _luhnCheck(input); // Luhn algoritması ile kart numarasını doğrula
-  }
-
-  bool _luhnCheck(String cardNumber) {
-    int sum = 0;
-    bool alternate = false;
-    for (int i = cardNumber.length - 1; i >= 0; i--) {
-      int n = int.parse(cardNumber[i]);
-      if (alternate) {
-        n *= 2;
-        if (n > 9) n -= 9;
-      }
-      sum += n;
-      alternate = !alternate;
-    }
-    return (sum % 10 == 0);
-  }
-
-  bool validateExpiryDate(String input) {
-    if (input.length != 5) return false;
-    if (input[2] != '/') return false;
-
-    final currentYear = DateTime.now().year % 100;
-    final currentMonth = DateTime.now().month;
-
-    final expiryMonth = int.tryParse(input.substring(0, 2));
-    final expiryYear = int.tryParse(input.substring(3));
-
-    if (expiryMonth == null || expiryYear == null) return false;
-
-    if (expiryMonth < 1 || expiryMonth > 12) return false;
-
-    if (expiryYear < currentYear ||
-        (expiryYear == currentYear && expiryMonth < currentMonth)) {
-      return false;
-    }
-
-    return true;
-  }
-
 }
 
 class SizedBoxSize8 extends StatelessWidget {
@@ -307,3 +380,21 @@ List<DropdownMenuItem> donationAmounts = [
   DropdownMenuItem(child: Text("1600 TL"), value: 1600),
   DropdownMenuItem(child: Text("2000 TL"), value: 2000),
 ];
+
+
+    /*
+      // Kullanıcıdan alınacak bilgiler
+    int petID = 1;
+    String price = "100";
+    String type = 'feeding'; // feeding veya adoption
+    String cardHolderName = 'John doe';
+    String cardNumber = '5890040000000016';
+    String expireMonth = '12';
+    String expireYear = '2025';
+    String cvc = '500';
+    String tc = '12345678911'; // T.C. Kimlik Numarası
+    String city = 'Samsun';
+    String district = 'atakum';
+    String country = 'Türkiye';
+    String address = 'körfez mah 50108 sokak bina 9 no 15';
+    */

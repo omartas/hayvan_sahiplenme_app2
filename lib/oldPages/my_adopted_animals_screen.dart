@@ -3,29 +3,16 @@ import 'package:get/get.dart';
 
 import '../controllers/auth_controller.dart';
 import '../models/adopted_animal.dart';
-import 'login_screen.dart';
+import '../screens/login_screen.dart';
 
 class AdoptedAnimalsPage extends StatelessWidget {
   final AuthController authController = Get.find<AuthController>();
     
-  final List<AdoptedAnimal> adoptedAnimals = [
-    AdoptedAnimal(
-      name: "Bella",
-      breed: "Golden Retriever",
-      imageUrl: "https://dogakopekuretim.com/wp-content/uploads/2021/06/golden-retriever-1.jpg",
-      adoptionStatus: "Teslim Alındı",
-    ),
-    AdoptedAnimal(
-      name: "Max",
-      breed: "Alman",
-      imageUrl: "https://www.guardiaturca.com/wp-content/uploads/german-shepherd-alman-kurdu-ozellikleri.jpg",
-      adoptionStatus: "Bekleniyor",
-    ),
-  ];
+
 
   @override
   Widget build(BuildContext context) {
-    if (authController.user == null) {
+    if (authController.isLoggedIn.value!=true) {
           return Center(
             child: ElevatedButton(
                 onPressed: () => Get.offAll(() => LoginScreen()),
@@ -80,4 +67,18 @@ class AdoptedAnimalsPage extends StatelessWidget {
       backgroundColor: statusColor,
     );
   }
+    final List<AdoptedAnimal> adoptedAnimals = [
+    AdoptedAnimal(
+      name: "Bella",
+      breed: "Golden Retriever",
+      imageUrl: "https://dogakopekuretim.com/wp-content/uploads/2021/06/golden-retriever-1.jpg",
+      adoptionStatus: "Teslim Alındı",
+    ),
+    AdoptedAnimal(
+      name: "Max",
+      breed: "Alman",
+      imageUrl: "https://www.guardiaturca.com/wp-content/uploads/german-shepherd-alman-kurdu-ozellikleri.jpg",
+      adoptionStatus: "Bekleniyor",
+    ),
+  ];
 }

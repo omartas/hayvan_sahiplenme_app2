@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hayvan_sahiplenme_app2/screens/animal/animal_card.dart';
-import 'package:hayvan_sahiplenme_app2/screens/animal/animal_detail_test_screen.dart';
-import '../controllers/animal_controller.dart';
-import '../utils/connectivity_service.dart';
+import 'animal_controller.dart';
+import 'animal_detail_test_screen.dart';
+
 
 class AnimalsScreen extends StatefulWidget {
   static final String shelterId = "shelter1"; 
